@@ -8,61 +8,126 @@ output:
 
 ## Loading and preprocessing the data
 
-```{r}
+
+```r
 unzip("activity.zip")
 data <- read.csv("activity.csv", header=TRUE)
 clean_data <- data[which(data$steps != "NA"), ]
 ```
 
 ## What is mean total number of steps taken per day?
-```{r}
+
+```r
 library(plyr)
 total_by_day <- ddply(clean_data, .(date), summarise, steps=sum(steps))
 hist(total_by_day$steps, main="Number of Steps", 
      xlab="Total number of steps taken each day", col="light blue")
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+
+```r
 # mean and median total number of steps taken per day
 mean(total_by_day$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(total_by_day$steps)
 ```
 
+```
+## [1] 10765
+```
+
 ## What is the average daily activity pattern?
-```{r}
+
+```r
 average_by_interval <- ddply(clean_data, .(interval), summarise, steps=mean(steps))
 plot(average_by_interval$interval, average_by_interval$steps, type="l", 
      col="blue",
      xlab="5-minute interval", 
      ylab="Average number of steps taken",
      main="Average daily activity pattern")
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
+```r
 # Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 average_by_interval[average_by_interval$steps==max(average_by_interval$steps),]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
+```
+
+```r
 colnames(average_by_interval)[2] <- "intervalAvg"
 ```
 
 ## Imputing missing values
 
-```{r}
+
+```r
 # Total number of missing values in the dataset
 sum(is.na(data$steps))
+```
+
+```
+## [1] 2304
+```
+
+```r
 # Fill NA's with average for that 5-min interval
 merged <- arrange(join(data, average_by_interval), interval)
+```
+
+```
+## Joining by: interval
+```
+
+```r
 # Create a new dataset that is equal to the original dataset but with the missing data filled in.
 merged$steps[is.na(merged$steps)] <- merged$intervalAvg[is.na(merged$steps)]
 # Histogram
 new_total_by_day <- ddply(merged, .(date), summarise, steps=sum(steps))
 hist(new_total_by_day$steps, main="Number of Steps", 
      xlab="Total number of steps taken each day", col="light blue",)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
+```r
 # mean and median total number of steps taken per day
 mean(new_total_by_day$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(new_total_by_day$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 total_steps1 <- sum(clean_data$steps)
 total_steps2 <- sum(merged$steps)
 total_diff <- total_steps2 -total_steps1 []
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r}
+
+```r
 library(lattice)
 weekdays <- weekdays(as.Date(merged$date))
 data_with_weekdays <- transform(merged, day=weekdays)
@@ -71,3 +136,5 @@ average_by_interval_wk <- ddply(data_with_weekdays, .(interval, wk), summarise, 
 
 xyplot(steps ~ interval | wk, data = average_by_interval_wk, layout = c(1, 2), type="l")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
